@@ -18,6 +18,10 @@ app.use(cors());
 // Usar el router en la app
 app.use(router.routes()).use(router.allowedMethods());
 
+app.use((ctx, next) => {
+  ctx.body = 'Hola Mundo';
+});
+
 const port = 3000;
 app.listen(port, () => {
   console.log(`Servidor Koa corriendo en http://localhost:${port}`);
