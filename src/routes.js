@@ -8,7 +8,7 @@ router.get('/', async ctx => {
   ctx.body = 'Ruta principal de la API';
 });
 
-router.use('/api/orders', orders.routes());
+router.use('/orders', orders.routes());
 
 
 module.exports = router;

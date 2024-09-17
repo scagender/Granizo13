@@ -2,11 +2,11 @@ const Koa = require('koa');
 const cors = require('@koa/cors');
 const router = require('./routes');
 
+router.prefix('/api');
+
 const PORT = process.env.PORT || 8080;
 
 const app = new Koa();
-
-app.use(router.routes());
 
 // Definir rutas
 // router.get('/', async ctx => {
@@ -20,11 +20,8 @@ router.get('/saludo', async ctx => {
 app.use(cors());
 
 // Usar el router en la app
-// app.use(router.routes()).use(router.allowedMethods());
-
-// app.use((ctx, next) => {
-//   ctx.body = 'Hola Mundo';
-// });
+app.use(router.routes())
+  .use(router.allowedMethods());
 
 const server = app.listen(PORT, () => {
   console.log(`Servidor Koa corriendo en http://localhost:${PORT}`);
