@@ -1,9 +1,40 @@
 import React from 'react';
 import './OrderTable.css';
+import { useEffect, useState } from 'react';
 
-function DataTable({}) {
 
-  // hacer un fetch data en esta linea y luego hacer un map de los datos para mostrarlos en la tabla
+function DataTable() {
+
+  const [orders, setOrders] = useState([]);
+
+  // useEffect(() => {
+  //   fetch('https://api.example.com/orders')
+  //     .then(response => response.json())
+  //     .then(data => setOrders(data))
+  //     .catch(error => console.error(error))
+  // }, []);
+
+  // REEMPLAZAR ESTO CON EL FETCH REAL
+  useEffect(() => {
+    const data = [
+      {
+        date: "2021-09-01 12:00",
+        id: "123456",
+        sku: "SKU: Amount",
+        status: "Pending",
+        more: "More..."
+      },
+      {
+        date: "2021-09-01 12:00",
+        id: "789012",
+        sku: "SKU: Amount",
+        status: "Shipped",
+        more: "More..."
+      }
+    ];
+    
+    setOrders(data);
+  }, []);
 
   return (
     <div className="data-table-container">
@@ -18,13 +49,15 @@ function DataTable({}) {
           </tr>
         </thead>
         <tbody>
-          <tr>
-            <td>{"Test date"}</td>
-            <td>{"Test id"}</td>
-            <td>{"SKU: Amount"}</td>
-            <td>{"Status"}</td>
-            <td>{"More..."}</td>
-          </tr>
+          {orders.map(order => (
+            <tr>
+              <td>{order.date}</td>
+              <td>{order.id}</td>
+              <td>{order.sku}</td>
+              <td>{order.status}</td>
+              <td>{order.more}</td>
+            </tr>
+          ))}
         </tbody>
       </table>
     </div>
