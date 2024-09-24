@@ -1,3 +1,5 @@
+const { Order } = require('../models');
+
 const createOrder = async (req, res) => {
     try {
         res.status(201).json({ message: 'Order created' });
@@ -6,11 +8,17 @@ const createOrder = async (req, res) => {
     }
 };
 
-const getAllOrders = async (req, res) => {
+const getAllOrders = async (ctx) => {
     try {
-        res.status(200).json({ message: 'All orders' });
+        const orders = await Order.findAll({
+            order: [['receivedAt', 'DESC']]
+        });
+
+        ctx.status = 200;
+        ctx.body = orders;
     } catch (error) {
-        res.status(400).json({ error: error.message });
+        ctx.status = 400;
+        ctx.body = { error: error.message };
     }
 };
 
