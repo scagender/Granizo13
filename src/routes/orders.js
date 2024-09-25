@@ -1,5 +1,6 @@
 const Router = require('@koa/router');
 const router = new Router();
+const { Order } = require('../models');
 const {
     createOrder,
     getAllOrders,
@@ -28,7 +29,12 @@ router.post('/', async (ctx) => {
 
 router.get('/', async (ctx) => {
     try {
-        getAllOrders(ctx);
+        const orders = await Order.findAll({
+            order: [['receivedAt', 'DESC']]
+        });
+
+        ctx.status = 200;
+        ctx.body = orders;
     } catch (error) {
         ctx.status = 400;
         ctx.json({ error: error.message });
