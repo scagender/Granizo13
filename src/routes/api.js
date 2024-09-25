@@ -149,8 +149,8 @@ router.post('/coffeshop/products', async (ctx) => {
         console.log("pidiendo")
         // Petición POST para crear un producto
         const productResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products', {
-            sku: "10YK",
-            quantity: 1
+            sku,
+            quantity
         }, {
             headers: {
                 Authorization: `Bearer ${token}`,
