@@ -1,6 +1,7 @@
 const Router = require('@koa/router');
 const router = new Router();
 const { Order } = require('../models');
+const axios = require('axios');
 const {
     createOrder,
     getAllOrders,
@@ -24,16 +25,19 @@ router.post('/', async (ctx) => {
      const orderStatus = 'aceptado'; // Puedes establecer un estado inicial si lo deseas
 
     // Validación básica
-    if (!id || !dueDate || !order) {
+    if (!id || !dueDate || !order || !Array.isArray(order)) {
         ctx.status = 400; // Bad Request
         ctx.body = { error: 'Missing required fields or incorrect format.' };
         return;
     }
+    console.log('Sending product creation request:', { id, dueDate, order });
+    const orderId = id;
 
     try {
         // Crear pedidos en la base de datos
         for (const item of order) {
             const { sku, quantity } = item;
+            console.log('Sending product creation request:', { sku, quantity });
             
             // Puedes agregar aquí más validaciones para sku y quantity si es necesario
 
@@ -46,11 +50,12 @@ router.post('/', async (ctx) => {
                 receivedAt: dueDate, // Fecha de recepción actual
             });
 
+            console.log('Sending product creation request:', { sku, quantity, id });
             try {
-                const response = await axios.post('http://localhost:8080/api/coffeshop/products', {
+                const response = await axios.post('http://localhost:8080/api/api/coffeshop/products', {
                     sku,
                     quantity,
-                    id
+                    orderId
                 }, {
                     headers: {
                         'Content-Type': 'application/json'

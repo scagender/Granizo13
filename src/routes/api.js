@@ -128,8 +128,10 @@ router.post('/:storeId/inventory', async (ctx) => {
 router.post('/coffeshop/products', async (ctx) => {
     const { sku, quantity, orderId } = ctx.request.body; // Obtenemos sku y quantity del cuerpo de la solicitud
 
+    console.log('Reiceiving product creation request:', {sku, quantity, orderId });
+
     // Validación de quantity
-    if (typeof quantity !== 'number' || quantity < 1 || quantity > 5000 || quantity % 1 !== 0) {
+    if (quantity < 1 || quantity > 5000) {
         ctx.status = 400; // Bad Request
         ctx.body = { error: 'Quantity must be an integer between 1 and 5000 and a multiple of the SKU batch.' };
         return;
@@ -144,10 +146,11 @@ router.post('/coffeshop/products', async (ctx) => {
 
         const token = authResponse.data.token;
 
+        console.log("pidiendo")
         // Petición POST para crear un producto
         const productResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products', {
-            sku,
-            quantity
+            sku: "10YK",
+            quantity: 1
         }, {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -155,7 +158,14 @@ router.post('/coffeshop/products', async (ctx) => {
             },
         });
 
+        console.log(productResponse.data);
         const productAttributes = productResponse.data;
+
+        await Product.create({
+            _id: productAttributes._id, // Puedes considerar si deseas que este id se use como referencia
+            sku: productAttributes.sku,
+            availableAt: productAttributes.availableAt // Puedes establecer un estado inicial si lo deseas
+        });
         const inventoryAttributes = {
             _id: productAttributes._id,                  // ID del producto
             createdAt: productAttributes.createdAt,      // Fecha de creación
@@ -167,21 +177,7 @@ router.post('/coffeshop/products', async (ctx) => {
             availableAt: productAttributes.availableAt,  // Fecha en que estará disponible
         };
 
-        // Llamar al endpoint api/coffeshop/dispatch
-        try {
-            const dispatchResponse = await axios.post('http://localhost:8080/api/coffeshop/dispatch', {
-                productId: productAttributes._id,
-                orderId: orderId
-            }, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
-
-            console.log('Dispatch created:', dispatchResponse.data);
-        } catch (error) {
-            console.error('Error creating dispatch:', error.response ? error.response.data : error.message);
-        }
+        
 
         // Devolver los atributos desglosados
         ctx.status = 201; // Created
