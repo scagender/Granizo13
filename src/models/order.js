@@ -13,9 +13,10 @@ module.exports = (sequelize, DataTypes) => {
   }
 
   Order.init({
-        deliveryDate: DataTypes.DATE,
+        orderId: DataTypes.STRING,
         status: DataTypes.ENUM('aceptado', 'rechazado'),
-        skus: DataTypes.JSON,
+        sku: DataTypes.STRING,
+        quantity: DataTypes.INTEGER,
         receivedAt: DataTypes.DATE,
       }, {
         sequelize,

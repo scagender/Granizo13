@@ -1,5 +1,6 @@
 const Koa = require('koa');
 const cors = require('@koa/cors');
+const bodyParser = require('koa-bodyparser');
 const router = require('./routes');
 
 router.prefix('/api');
@@ -18,10 +19,13 @@ router.get('/saludo', async ctx => {
 });
 
 app.use(cors());
+app.use(bodyParser());
+
+
 
 // Usar el router en la app
 app.use(router.routes())
-  .use(router.allowedMethods());
+app.use(router.allowedMethods());
 
 const server = app.listen(PORT, () => {
   console.log(`Servidor Koa corriendo en http://localhost:${PORT}`);
