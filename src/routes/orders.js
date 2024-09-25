@@ -52,7 +52,7 @@ router.post('/', async (ctx) => {
 
             console.log('Sending product creation request:', { sku, quantity, id });
             try {
-                const response = await axios.post('http://localhost:8080/api/api/coffeshop/products', {
+                const response = await axios.post('https://granizo13.ing.puc.cl/api/api/coffeshop/products', {
                     sku,
                     quantity,
                     orderId
