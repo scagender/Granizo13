@@ -2,6 +2,7 @@ const Router = require('@koa/router');
 const router = new Router();
 
 const orders = require('./routes/orders');
+const apiRoutes = require('./routes/api');
 const { server } = require('./app');
 
 
@@ -10,6 +11,8 @@ router.get('/', async ctx => {
 });
 
 router.use('/orders', orders.routes());
+
+router.use('/api', apiRoutes.routes());
 
 async function checkDB(ctx) {
   try {

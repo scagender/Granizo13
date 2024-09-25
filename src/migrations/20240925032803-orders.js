@@ -8,22 +8,25 @@ module.exports = {
     await queryInterface.createTable('Orders', {
       id: {
         allowNull: false,
+        autoIncrement: true,
         primaryKey: true,
-        type: Sequelize.UUID,
-        defaultValue: Sequelize.UUIDV4,
+        type: Sequelize.INTEGER
       },
-      deliveryDate: {
+      orderId: {
         allowNull: false,
-        type: Sequelize.DATE,
+        type: Sequelize.STRING
       },
       status: {
         allowNull: false,
         type: Sequelize.ENUM('aceptado', 'rechazado'),
-        defaultValue: 'aceptado',
       },
-      skus: {
+      sku: {
         allowNull: false,
-        type: Sequelize.JSON,
+        type: Sequelize.STRING,
+      },
+      quantity: {
+        allowNull: false,
+        type: Sequelize.INTEGER,
       },
       receivedAt: {
         allowNull: false,
