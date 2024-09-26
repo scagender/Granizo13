@@ -6,7 +6,7 @@ module.exports = {
     
   await queryInterface.addColumn('Orders', 'orderMaxDate', {
     type: Sequelize.DATE,
-    allowNull: false,
+    allowNull: true,
   });
   },
 
