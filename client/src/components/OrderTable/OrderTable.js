@@ -5,8 +5,7 @@ function OrderTable() {
   const [orders, setOrders] = useState([]);
 
   useEffect(() => {
-    //fetch('https://granizo13.ing.puc.cl/api/orders')
-    fetch('/orders.json')
+    fetch('https://granizo13.ing.puc.cl/api/orders')
       .then(response => response.json())
       .then(data => setOrders(data))
       .catch(error => console.error('Error:', error));

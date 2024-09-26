@@ -12,60 +12,29 @@ function Metrics() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Petición POST para autenticación
-                const authResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/auth', {
-                    group: 13,
-                    secret: 'tw9fzC!*n6&PgydV%u8N3LXAe_H?JYQ+',
-                });
+                // Buscar las métricas desde el server
+                const metricsEndpoints = [
+                    'https://granizo13.ing.puc.cl/api/metrics/expiring-items',
+                    'https://granizo13.ing.puc.cl/api/metrics/total-sku',
+                    'https://granizo13.ing.puc.cl/api/metrics/available-storage',
+                    'https://granizo13.ing.puc.cl/api/orders'
+                ];
 
-                const token = authResponse.data.token;
+                const [expiringItemsResponse, skuResponse, storageResponse, ordersResponse] = await Promise.all(
+                    metricsEndpoints.map(url => axios.get(url))
+                );
 
-                // Obtener los espacios usando el token
-                const spacesResponse = await axios.get('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/spaces', {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                });
+                setExpiringProducts(expiringItemsResponse.data);
+                setTotalStockBySKU(skuResponse.data);
+                setCafeteriaSpaces(storageResponse.data);
 
-                const spaces = spacesResponse.data;
-                const stockBySKU = {};
-
-                // Obtener el inventario de cada espacio
-                await Promise.all(spaces.map(async (space) => {
-                    const inventoryResponse = await axios.get(`https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/spaces/${space._id}/inventory`, {
-                        headers: {
-                            Authorization: `Bearer ${token}`,
-                        },
-                    });
-                    inventoryResponse.data.forEach(item => {
-                        stockBySKU[item.sku] = (stockBySKU[item.sku] || 0) + item.quantity;
-                    });
-                }));
-
-                setTotalStockBySKU(stockBySKU);
-
-                // Uso de los espacios
-                const formattedSpaces = spaces.map(space => ({
-                    id: space._id,
-                    usedSpace: `${space.usedSpace}/${space.totalSpace} (${((space.usedSpace / space.totalSpace) * 100).toFixed(2)}%)`,
-                    details: Object.entries(space)
-                        .filter(([key, value]) => key !== '_id' && key !== 'usedSpace' && key !== 'totalSpace')
-                        .map(([key, value]) => `${key}: ${value}`).join(', ')
-                }));
-                setCafeteriaSpaces(formattedSpaces);
-                
-                // Productos expirando sin token
-                const productResponse = await axios.get('https://dev.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products/available');
-                const expiringSoon = productResponse.data.filter(product => product.expiration <= 3);
-                setExpiringProducts(expiringSoon);
-
-                // Pedidos desde archivo JSON
-                const ordersResponse = await axios.get('/orders.json');
+                // Calcular pedidos por día (no lo piden pero igual) y por hora
                 const orders = ordersResponse.data;
                 const totalOrders = orders.length;
                 const totalDays = new Set(orders.map(order => new Date(order.receivedAt).toDateString())).size;
                 const ordersPerDayCalc = totalDays > 0 ? totalOrders / totalDays : 0;
                 const ordersPerHourCalc = ordersPerDayCalc / 24;
+
                 setOrdersPerDay(ordersPerDayCalc.toFixed(2));
                 setOrdersPerHour(ordersPerHourCalc.toFixed(2));
 
@@ -124,5 +93,5 @@ function Metrics() {
         </div>
     );
 }
-      
+
 export default Metrics;
