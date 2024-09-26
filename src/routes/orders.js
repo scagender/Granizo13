@@ -47,12 +47,13 @@ router.post('/', async (ctx) => {
                 sku: sku,
                 quantity: quantity,
                 status: orderStatus, // Puedes establecer un estado inicial si lo deseas
-                receivedAt: dueDate, // Fecha de recepción actual
+                orderMaxDate: dueDate, // Fecha máxima de entrega
+                receivedAt: new Date(), // Fecha de creación actual
             });
 
             console.log('Sending product creation request:', { sku, quantity, id });
             try {
-                const response = await axios.post('https://granizo13.ing.puc.cl/api/api/coffeshop/products', {
+                const response = await axios.post('http:/localhost:3000/api/api/coffeshop/products', {
                     sku,
                     quantity,
                     orderId

@@ -18,6 +18,7 @@ module.exports = (sequelize, DataTypes) => {
         sku: DataTypes.STRING,
         quantity: DataTypes.INTEGER,
         receivedAt: DataTypes.DATE,
+        orderMaxDate: DataTypes.DATE
       }, {
         sequelize,
         modelName: 'Order',
