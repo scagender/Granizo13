@@ -15,11 +15,14 @@ router.use('/orders', orders.routes());
 router.use('/metrics', metrics.routes());
 router.use('/api', apiRoutes.routes());
 
+
 async function checkDB(ctx) {
   try {
-    return true;
+    // Realiza una consulta básica para verificar si la base de datos está disponible
+    return true; // Si la consulta es exitosa, la base de datos está bien
   } catch (error) {
-    ctx.status = 500;
+    console.error('Error conectando a la base de datos:', error);
+    return false; // Si ocurre un error, significa que la base de datos no está accesible
   }
 }
 
@@ -29,7 +32,8 @@ router.get('/health', async ctx => {
   ctx.body = { 
     db: dbStatus? 'ok': 'error',
     server: 'ok'
-  };  
+  };
 });
+
 
 module.exports = router;

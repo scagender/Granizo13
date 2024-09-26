@@ -129,6 +129,12 @@ router.post('/:storeId/inventory', async (ctx) => {
 router.post('/coffeshop/products', async (ctx) => {
     const { sku, quantity, orderId } = ctx.request.body; // Obtenemos sku y quantity del cuerpo de la solicitud
 
+    const checkIn = "66f203ced3f26274cc8b50f2"
+    const buffer = "66f203ced3f26274cc8b5111"
+    const checkOut = "66f203ced3f26274cc8b5117"
+    const kitchen = "66f203ced3f26274cc8b5131"
+    const cold = "66f203ced3f26274cc8b514d"
+
     console.log('Reiceiving product creation request:', {sku, quantity, orderId });
 
     // Validación de quantity
@@ -146,12 +152,78 @@ router.post('/coffeshop/products', async (ctx) => {
         });
 
         const token = authResponse.data.token;
+        console.log("Pidiendo recetas...")
 
-        console.log("Pidiendo a los ayudantes el sku....")
-        // Petición POST para crear un producto
+        const RecipesResponse = await axios.get('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products/available');
+          
+        const Recipes = RecipesResponse.data;
+        const product = Recipes.find(item => item.sku === sku);
+        const skuNecesary = product.recipe.map(ingredient => ({
+            sku: ingredient.sku,
+            required: ingredient.req // Guarda la cantidad requerida
+        }));
+        for (const ingredient of skuNecesary) {
+            const skuNecesaryProduct = Recipes.find(item => item.sku === ingredient.sku);
+            if (skuNecesaryProduct) {
+                console.log({
+                    sku: skuNecesaryProduct.sku,
+                    batch: skuNecesaryProduct.production.batch,
+                    time: skuNecesaryProduct.production.time, // Incluye la cantidad requerida
+                    place: skuNecesaryProduct.production.at
+                });
+            }
+            const skuName = skuNecesaryProduct.sku;
+            console.log("PRODUCTO:", skuName)
+            const requiredIngredient = skuNecesary.find(ingredient => ingredient.sku === skuNecesaryProduct.sku);
+            console.log("AAAAAAAAA", requiredIngredient)
+            const skuQuantity = skuNecesaryProduct.production.batch * requiredIngredient.required;
+            console.log("Cantidad de sku necesaria:", skuQuantity);
+
+
+            //const productsInKitchen = await axios.get(`https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/spaces/${kitchen}/products?sku=${skuName}`,{
+                //headers: { Authorization: `Bearer ${token}` },
+            //});
+            //console.log("Products in space: ", productsInKitchen.data)
+
+            const productResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products', {
+                sku: sku,
+                quantity: quantity
+            }, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    'Content-Type': 'application/json',
+                },
+            });
+
+            console.log("Se creó el producto con id: ", productResponse.data._id)
+
+
+            const productsInSpace = await axios.get(`https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/spaces/${checkIn}/products?sku=${skuName}`,{
+                headers: { Authorization: `Bearer ${token}` },
+            });
+
+            console.log("Products in space: ", productsInSpace.data)
+
+            const productId = productsInSpace.data[0]._id //productResponse.data._id;
+            console.log(productId)
+
+            // Petición POST para crear un producto
+
+            const moveResponse = await axios.patch(`https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products/${productId}`,{
+                store: kitchen
+            },{
+                headers: { Authorization: `Bearer ${token}`, 'Content-Type': `application/json` },
+            });
+            console.log("Se movio: ", moveResponse.data)
+
+        }
+
+        console.log(product.production.batch)
+        const aPedir = quantity*product.production.batch
+
         const productResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products', {
             sku,
-            quantity
+            quantity: aPedir
         }, {
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -159,53 +231,10 @@ router.post('/coffeshop/products', async (ctx) => {
             },
         });
 
-        console.log(productResponse.data);
-        const productAttributes = productResponse.data;
-
-        await Product.create({
-            _id: productAttributes._id, // Puedes considerar si deseas que este id se use como referencia
-            sku: productAttributes.sku,
-            availableAt: productAttributes.availableAt // Puedes establecer un estado inicial si lo deseas
-        });
-        const inventoryAttributes = {
-            _id: productAttributes._id,                  // ID del producto
-            createdAt: productAttributes.createdAt,      // Fecha de creación
-            updatedAt: productAttributes.updatedAt,      // Fecha de actualización
-            sku: productAttributes.sku,                  // SKU del producto
-            group: productAttributes.group,              // Grupo al que pertenece
-            checkOut: productAttributes.checkOut,        // Bool
-            quantity: productAttributes.quantity,        // Cantidad del producto
-            availableAt: productAttributes.availableAt,  // Fecha en que estará disponible
-        };
-
-        const productMoveResponse = await axios.patch(`https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products/${productAttributes._id}`, {
-            store: "66f203ced3f26274cc8b5131", // Enviar el ID de la tienda en el cuerpo
-        }, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            }
-        });
-
-
-        // Suponiendo que la respuesta tiene el formato proporcionado
-
-        const productReadyResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products', {
-            sku,
-            quantity
-        }, {
-            headers: {
-                Authorization: `Bearer ${token}`,
-                'Content-Type': 'application/json',
-            },
-        });
-        
-
-        
 
         // Devolver los atributos desglosados
         ctx.status = 201; // Created
-        ctx.body = productReadyResponse;
+        ctx.body = productResponse.data;
     } catch (error) {
         console.error('Error details:', {
             message: error.message,
