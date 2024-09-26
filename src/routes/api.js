@@ -2,6 +2,7 @@ const Router = require('@koa/router');
 const router = new Router();
 const { receiveProducts } = require('../controllers/orders_controller');
 const axios = require('axios');
+const { Product } = require('../models');
 
 // Ruta para manejar la obtención del token y espacios desde la API externa
 router.get('/spaces', async (ctx) => {
