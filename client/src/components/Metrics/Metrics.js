@@ -1,51 +1,56 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
+import axios from 'axios';
 import './Metrics.css';
-import { useEffect, useState } from 'react';
 
 function Metrics() {
-    const [storageFull, setStorageFull] = useState([]);
-    const [stock, setStock] = useState([]);
-    const [ordersPerHour, setOrdersPerHour] = useState([]);
+    const [ordersPerHour, setOrdersPerHour] = useState(0);
+    const [ordersPerDay, setOrdersPerDay] = useState(0);
     const [expiringProducts, setExpiringProducts] = useState([]);
+    const [cafeteriaSpaces, setCafeteriaSpaces] = useState([]);
+    const [totalStockBySKU, setTotalStockBySKU] = useState({});
 
-    // Reemplazar con el fetch real
     useEffect(() => {
-        const data = {
-            storageFull: [{name: "Storage 1", stock: "100%"}, {name: "Storage 2", stock: "50%"}],
-            stock: [{name: "Product 1", stock: "100"}, {name: "Product 2", stock: "50"}],
-            ordersPerHour: "10",
-            expiringProducts: "5"
+        const fetchData = async () => {
+            try {
+                // Buscar las métricas desde el server
+                const metricsEndpoints = [
+                    'https://granizo13.ing.puc.cl/api/metrics/expiring-items',
+                    'https://granizo13.ing.puc.cl/api/metrics/total-sku',
+                    'https://granizo13.ing.puc.cl/api/metrics/available-storage',
+                    'https://granizo13.ing.puc.cl/api/orders'
+                ];
+
+                const [expiringItemsResponse, skuResponse, storageResponse, ordersResponse] = await Promise.all(
+                    metricsEndpoints.map(url => axios.get(url))
+                );
+
+                setExpiringProducts(expiringItemsResponse.data);
+                setTotalStockBySKU(skuResponse.data);
+                setCafeteriaSpaces(storageResponse.data);
+
+                // Calcular pedidos por día (no lo piden pero igual) y por hora
+                const orders = ordersResponse.data;
+                const totalOrders = orders.length;
+                const totalDays = new Set(orders.map(order => new Date(order.receivedAt).toDateString())).size;
+                const ordersPerDayCalc = totalDays > 0 ? totalOrders / totalDays : 0;
+                const ordersPerHourCalc = ordersPerDayCalc / 24;
+
+                setOrdersPerDay(ordersPerDayCalc.toFixed(2));
+                setOrdersPerHour(ordersPerHourCalc.toFixed(2));
+
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
         };
-        setStorageFull(data.storageFull);
-        setStock(data.stock);
-        setOrdersPerHour(data.ordersPerHour);
-        setExpiringProducts(data.expiringProducts);
-        console.log(data);
+
+        fetchData();
     }, []);
 
     return (
         <div className="metrics-container">
             <div className="metric">
-                <h2>Storage full</h2>
-                <ul>
-                    {storageFull.map(storage => (
-                        <li>
-                            <p>{storage.name}</p>
-                            <p>{storage.stock}</p>
-                        </li>
-                    ))}
-                </ul>
-            </div>
-            <div className="metric">
-                <h2>Stock</h2>
-                <ul>
-                    {stock.map(product => (
-                        <li>
-                            <p>{product.name}</p>
-                            <p>{product.stock}</p>
-                        </li>
-                    ))}
-                </ul>
+                <h2>Orders per day</h2>
+                <p>{ordersPerDay}</p>
             </div>
             <div className="metric">
                 <h2>Orders per hour</h2>
@@ -53,11 +58,40 @@ function Metrics() {
             </div>
             <div className="metric">
                 <h2>Expiring products</h2>
-                <p>{expiringProducts}</p>
+                <ul>
+                    {expiringProducts.map(product => (
+                        <li key={product.sku}>
+                            <p>{product.name}</p>
+                            <p>Expira en: {product.expiration} horas</p>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <div className="metric">
+                <h2>Cafeteria Spaces</h2>
+                <ul>
+                    {cafeteriaSpaces.map(space => (
+                        <li key={space.id}>
+                            <p>ID: {space.id}</p>
+                            <p>Used Space: {space.usedSpace}</p>
+                            <p>Details: {space.details}</p>
+                        </li>
+                    ))}
+                </ul>
+            </div>
+            <div className="metric">
+                <h2>Total Stock by SKU</h2>
+                <ul>
+                    {Object.entries(totalStockBySKU).map(([sku, quantity]) => (
+                        <li key={sku}>
+                            <p>SKU: {sku}</p>
+                            <p>Quantity: {quantity}</p>
+                        </li>
+                    ))}
+                </ul>
             </div>
         </div>
     );
 }
-      
-export default Metrics;
 
+export default Metrics;

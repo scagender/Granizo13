@@ -1,61 +1,37 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import './OrderTable.css';
-import { useEffect, useState } from 'react';
 
-
-function DataTable() {
-
+function OrderTable() {
   const [orders, setOrders] = useState([]);
 
-  // useEffect(() => {
-  //   fetch('https://api.example.com/orders')
-  //     .then(response => response.json())
-  //     .then(data => setOrders(data))
-  //     .catch(error => console.error(error))
-  // }, []);
-
-  // REEMPLAZAR ESTO CON EL FETCH REAL
   useEffect(() => {
-    const data = [
-      {
-        date: "2021-09-01 12:00",
-        id: "123456",
-        sku: "SKU: Amount",
-        status: "Pending",
-        more: "More..."
-      },
-      {
-        date: "2021-09-01 12:00",
-        id: "789012",
-        sku: "SKU: Amount",
-        status: "Shipped",
-        more: "More..."
-      }
-    ];
-    
-    setOrders(data);
+    fetch('https://granizo13.ing.puc.cl/api/orders')
+      .then(response => response.json())
+      .then(data => setOrders(data))
+      .catch(error => console.error('Error:', error));
   }, []);
 
   return (
     <div className="data-table-container">
+      <h1>Tabla de Pedidos</h1>
       <table className="data-table">
         <thead>
           <tr>
             <th>Fecha y hora del pedido</th>
-            <th>Order id</th>
-            <th>SKU/Amount</th>
-            <th>Status</th>
-            <th>More information</th>
+            <th>ID del pedido</th>
+            <th>SKU/Cantidad</th>
+            <th>Estado</th>
+            <th>Más información</th>
           </tr>
         </thead>
         <tbody>
-          {orders.map(order => (
-            <tr>
-              <td>{order.date}</td>
-              <td>{order.id}</td>
-              <td>{order.sku}</td>
+          {orders.map((order, index) => (
+            <tr key={index}>
+              <td>{new Date(order.receivedAt).toLocaleString()}</td>
+              <td>{order.orderId}</td>
+              <td>{`${order.sku} - ${order.quantity}`}</td>
               <td>{order.status}</td>
-              <td>{order.more}</td>
+              <td><button onClick={() => handleMoreInfo(order.orderId)}>Más...</button></td>
             </tr>
           ))}
         </tbody>
@@ -64,4 +40,9 @@ function DataTable() {
   );
 }
 
-export default DataTable;
+function handleMoreInfo(orderId) {
+  // Implementa la función para manejar "más información"
+  console.log('Mostrar más información para', orderId);
+}
+
+export default OrderTable;
