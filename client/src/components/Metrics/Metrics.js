@@ -12,7 +12,7 @@ function Metrics() {
     useEffect(() => {
         const fetchData = async () => {
             try {
-                // Buscar las métricas desde el server
+                // Fetch metrics data from the server
                 const metricsEndpoints = [
                     'https://granizo13.ing.puc.cl/api/metrics/expiring-items',
                     'https://granizo13.ing.puc.cl/api/metrics/total-sku',
@@ -26,9 +26,11 @@ function Metrics() {
 
                 setExpiringProducts(expiringItemsResponse.data);
                 setTotalStockBySKU(skuResponse.data);
-                setCafeteriaSpaces(storageResponse.data);
+                setCafeteriaSpaces(storageResponse.data.map(space => ({
+                    ...space,
+                    name: space.kitchen ? "Kitchen" : space.cold ? "Cold" : space.checkIn ? "Check In" : space.checkOut ? "Check Out" : space.buffer ? "Buffer" : "Unknown"
+                })));
 
-                // Calcular pedidos por día (no lo piden pero igual) y por hora
                 const orders = ordersResponse.data;
                 const totalOrders = orders.length;
                 const totalDays = new Set(orders.map(order => new Date(order.receivedAt).toDateString())).size;
@@ -72,7 +74,7 @@ function Metrics() {
                 <ul>
                     {cafeteriaSpaces.map(space => (
                         <li key={space.id}>
-                            <p>ID: {space.id}</p>
+                            <p>Space: {space.name}</p>
                             <p>Used Space: {space.usedSpace}</p>
                             <p>Details: {space.details}</p>
                         </li>
