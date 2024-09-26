@@ -184,7 +184,13 @@ router.post('/coffeshop/products', async (ctx) => {
         ctx.status = 201; // Created
         ctx.body = inventoryAttributes;
     } catch (error) {
-        console.error(error);
+        console.error('Error details:', {
+            message: error.message,
+            response: error.response ? error.response.data : 'No response received',
+            status: error.response ? error.response.status : 'No status',
+            headers: error.response ? error.response.headers : 'No headers',
+            config: error.config
+        });
         ctx.status = error.response ? error.response.status : 500; // Manejo de errores
         ctx.body = { error: 'An error occurred while creating the product.' };
     }
