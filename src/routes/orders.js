@@ -91,7 +91,7 @@ router.get('/', async (ctx) => {
         ctx.body = orders;
     } catch (error) {
         ctx.status = 400;
-        ctx.json({ error: error.message });
+        ctx.body({ error: error.message });
     }
 });
 
