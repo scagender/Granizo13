@@ -2,6 +2,7 @@ const Router = require('@koa/router');
 const router = new Router();
 const { receiveProducts } = require('../controllers/orders_controller');
 const axios = require('axios');
+const { Product } = require('../models');
 
 // Ruta para manejar la obtención del token y espacios desde la API externa
 router.get('/spaces', async (ctx) => {
@@ -128,8 +129,10 @@ router.post('/:storeId/inventory', async (ctx) => {
 router.post('/coffeshop/products', async (ctx) => {
     const { sku, quantity, orderId } = ctx.request.body; // Obtenemos sku y quantity del cuerpo de la solicitud
 
+    console.log('Reiceiving product creation request:', {sku, quantity, orderId });
+
     // Validación de quantity
-    if (typeof quantity !== 'number' || quantity < 1 || quantity > 5000 || quantity % 1 !== 0) {
+    if (quantity < 1 || quantity > 5000) {
         ctx.status = 400; // Bad Request
         ctx.body = { error: 'Quantity must be an integer between 1 and 5000 and a multiple of the SKU batch.' };
         return;
@@ -144,6 +147,7 @@ router.post('/coffeshop/products', async (ctx) => {
 
         const token = authResponse.data.token;
 
+        console.log("Pidiendo a los ayudantes el sku....")
         // Petición POST para crear un producto
         const productResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products', {
             sku,
@@ -155,7 +159,14 @@ router.post('/coffeshop/products', async (ctx) => {
             },
         });
 
+        console.log(productResponse.data);
         const productAttributes = productResponse.data;
+
+        await Product.create({
+            _id: productAttributes._id, // Puedes considerar si deseas que este id se use como referencia
+            sku: productAttributes.sku,
+            availableAt: productAttributes.availableAt // Puedes establecer un estado inicial si lo deseas
+        });
         const inventoryAttributes = {
             _id: productAttributes._id,                  // ID del producto
             createdAt: productAttributes.createdAt,      // Fecha de creación
@@ -167,27 +178,43 @@ router.post('/coffeshop/products', async (ctx) => {
             availableAt: productAttributes.availableAt,  // Fecha en que estará disponible
         };
 
-        // Llamar al endpoint api/coffeshop/dispatch
-        try {
-            const dispatchResponse = await axios.post('http://localhost:8080/api/coffeshop/dispatch', {
-                productId: productAttributes._id,
-                orderId: orderId
-            }, {
-                headers: {
-                    'Content-Type': 'application/json'
-                }
-            });
+        const productMoveResponse = await axios.patch(`https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products/${productAttributes._id}`, {
+            store: "66f203ced3f26274cc8b5131", // Enviar el ID de la tienda en el cuerpo
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            }
+        });
 
-            console.log('Dispatch created:', dispatchResponse.data);
-        } catch (error) {
-            console.error('Error creating dispatch:', error.response ? error.response.data : error.message);
-        }
+
+        // Suponiendo que la respuesta tiene el formato proporcionado
+
+        const productReadyResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products', {
+            sku,
+            quantity
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+        
+
+        
 
         // Devolver los atributos desglosados
         ctx.status = 201; // Created
-        ctx.body = inventoryAttributes;
+        ctx.body = productReadyResponse;
     } catch (error) {
-        console.error(error);
+        console.error('Error details:', {
+            message: error.message,
+            response: error.response ? error.response.data : 'No response received',
+            status: error.response ? error.response.status : 'No status',
+            headers: error.response ? error.response.headers : 'No headers',
+            config: error.config,
+            a: error.response.data.errors
+        });
         ctx.status = error.response ? error.response.status : 500; // Manejo de errores
         ctx.body = { error: 'An error occurred while creating the product.' };
     }
