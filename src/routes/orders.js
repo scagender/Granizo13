@@ -47,12 +47,13 @@ router.post('/', async (ctx) => {
                 sku: sku,
                 quantity: quantity,
                 status: orderStatus, // Puedes establecer un estado inicial si lo deseas
-                receivedAt: dueDate, // Fecha de recepción actual
+                orderMaxDate: dueDate, // Fecha máxima de entrega
+                receivedAt: new Date(), // Fecha de creación actual
             });
 
             console.log('Sending product creation request:', { sku, quantity, id });
             try {
-                const response = await axios.post('http://localhost:8080/api/api/coffeshop/products', {
+                const response = await axios.post('http:/localhost:3000/api/api/coffeshop/products', {
                     sku,
                     quantity,
                     orderId
@@ -90,7 +91,7 @@ router.get('/', async (ctx) => {
         ctx.body = orders;
     } catch (error) {
         ctx.status = 400;
-        ctx.json({ error: error.message });
+        ctx.body = { error: error.message };
     }
 });
 

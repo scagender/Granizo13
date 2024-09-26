@@ -472,4 +472,64 @@ router.get('/products/available', async (ctx) => {
     }
 });
 
+router.get('/test_inventory', async (ctx) => {
+    try {
+        const authResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/auth', {
+            group: 13,
+            secret: 'tw9fzC!*n6&PgydV%u8N3LXAe_H?JYQ+',
+        });
+    
+        const token = authResponse.data.token;
+
+        const spacesResponse = await axios.get('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/spaces', {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        kitchen = spacesResponse.data.find(space => space.kitchen === true);
+        console.log(kitchen);
+
+        const inventoryResponse = await axios.get(`https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/spaces/${kitchen._id}/inventory`, {
+            headers: { Authorization: `Bearer ${token}` },
+        });
+
+        const productsInSpace = await axios.get(`https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/spaces/${kitchen._id}/products?sku=CAFEMOLIDOPORCION&limit=150`,{
+            headers: { Authorization: `Bearer ${token}` },
+        });
+        
+        ctx.status = 200;
+        ctx.body = productsInSpace.data;
+    } catch (error) {
+        ctx.status = 400;
+        ctx
+    }
+});
+
+router.get('/mover', async (ctx) => {
+    try {
+        const authResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/auth', {
+            group: 13,
+            secret
+        });
+
+        const token = authResponse.data.token;
+
+        productId = "66f4b59b1022bda7ed7b23fe";
+
+        const moveProduct = await axios.patch(`https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products/${productId}`, {
+            store: "66f203ced3f26274cc8b5131",
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+
+        ctx.status = 200;
+        ctx.body = moveProduct.data;
+    } catch (error) {
+        ctx.status = 400;
+        ctx
+    }
+});
+
 module.exports = router;
