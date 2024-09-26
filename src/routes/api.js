@@ -147,7 +147,7 @@ router.post('/coffeshop/products', async (ctx) => {
 
         const token = authResponse.data.token;
 
-        console.log("pidiendo")
+        console.log("Pidiendo a los ayudantes el sku....")
         // Petición POST para crear un producto
         const productResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products', {
             sku,
@@ -178,11 +178,34 @@ router.post('/coffeshop/products', async (ctx) => {
             availableAt: productAttributes.availableAt,  // Fecha en que estará disponible
         };
 
+        const productMoveResponse = await axios.patch(`https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products/${productAttributes._id}`, {
+            store: "66f203ced3f26274cc8b5131", // Enviar el ID de la tienda en el cuerpo
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            }
+        });
+
+
+        // Suponiendo que la respuesta tiene el formato proporcionado
+
+        const productReadyResponse = await axios.post('https://prod.proyecto.2024-2.tallerdeintegracion.cl/coffeeshop/products', {
+            sku,
+            quantity
+        }, {
+            headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+            },
+        });
+        
+
         
 
         // Devolver los atributos desglosados
         ctx.status = 201; // Created
-        ctx.body = inventoryAttributes;
+        ctx.body = productReadyResponse;
     } catch (error) {
         console.error('Error details:', {
             message: error.message,
